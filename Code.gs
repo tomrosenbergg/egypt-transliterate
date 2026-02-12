@@ -200,6 +200,26 @@ function normalize_(s) {
     .replace(/\u061f/g, "?")
     .replace(/\s+/g, " ")
     .replace(/ ?([,;?!:.])/g, "$1")
+    // Egyptian colloquial cleanup for final plural -وا (e.g., إنتوا -> intoo, راحوا -> raa7oo).
+    .replace(/ooa\b/g, "oo")
+    .replace(/owa\b/g, "oo")
+    .replace(/([^o])oa\b/g, "$1oo")
+    .replace(/([^w])wa\b/g, "$1oo")
+    // Always normalize the definite article to "il-".
+    .replace(/\bal(?=[aiou])/g, "il-")
+    .replace(/\bal(?=[b-df-hj-np-tv-z23578])/g, "il-")
+    // Prevent over-doubling after article (il-shsh... -> il-sh..., il-ss... -> il-s...).
+    .replace(/\bil-shsh/g, "il-sh")
+    .replace(/\bil-(ss|zz|tt|dd|nn|rr|ll)/g, function (_, grp) {
+      return "il-" + grp[0];
+    })
+    // If article is followed by vowel-initial form, keep a clear separator.
+    .replace(/\bil([aiou])(?=[a-z0-9])/g, "il-$1")
+    // Soften common hamza+oo sequences in everyday Egyptian spelling.
+    .replace(/\bil-2a?oo/g, "il-oo")
+    .replace(/\b2a?oo/g, "oo")
+    .replace(/\bil-2oo/g, "il-oo")
+    .replace(/\b2oo/g, "oo")
     .trim();
 }
 
