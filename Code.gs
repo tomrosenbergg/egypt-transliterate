@@ -91,6 +91,7 @@ function transliterateEgyptianArabizi(text) {
     if (ch === AR.TATWEEL) continue;
     if (DIACRITIC[ch]) continue;
 
+    var baseIndex = i;
     var d = readDiacritics_(s, i + 1);
     i += d.count;
 
@@ -100,6 +101,12 @@ function transliterateEgyptianArabizi(text) {
     if (ch === "\u0623" && d.fatha) d.fatha = false;
 
     var base = MAP[ch] || ch;
+
+    // Word-initial alif+kasra (اِ) should be "i", not "ai"
+    // e.g., اِحنا -> i7na, اِكتب -> iktib
+    if (ch === AR.ALIF && d.kasra && isWordStart_(s, baseIndex)) {
+      base = "";
+    }
     if (ch === "\u0629" && out.length > 0 && /a$/.test(out[out.length - 1])) {
       base = "";
     }
@@ -194,6 +201,11 @@ function readDiacritics_(s, start) {
 
 function hasAttachedDiacritics_(s, index) {
   return !!s[index + 1] && DIACRITIC[s[index + 1]] === true;
+}
+
+function isWordStart_(s, i) {
+  if (i === 0) return true;
+  return /[\s,;?!:.()\[\]{}"'\-]/.test(s[i - 1]);
 }
 
 function normalize_(s) {
