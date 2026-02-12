@@ -100,6 +100,9 @@ function transliterateEgyptianArabizi(text) {
     if (ch === "\u0623" && d.fatha) d.fatha = false;
 
     var base = MAP[ch] || ch;
+    if (ch === "\u0629" && out.length > 0 && /a$/.test(out[out.length - 1])) {
+      base = "";
+    }
     if (d.shadda) base = base + base;
 
     if (
@@ -213,13 +216,32 @@ function normalize_(s) {
     .replace(/\bil-(ss|zz|tt|dd|nn|rr|ll)/g, function (_, grp) {
       return "il-" + grp[0];
     })
+    // Prefix + article smoothing.
+    .replace(/\bbi ?il-/g, "bil-")
+    .replace(/\bfi ?il-/g, "fil-")
+    .replace(/\bli ?il-/g, "lil-")
+    .replace(/\bwa ?il-/g, "wal-")
+    .replace(/\bbial/g, "bil-")
+    .replace(/\bfial/g, "fil-")
+    .replace(/\bwaal/g, "wal-")
+    .replace(/\blil([sztdnrl])\1/g, "lil$1")
+    // Avoid over-doubling after common prefixes.
+    .replace(/\b(wal|bil|lil)-(sh|s|z|t|d|n|r|l)\2/g, "$1-$2")
     // If article is followed by vowel-initial form, keep a clear separator.
     .replace(/\bil([aiou])(?=[a-z0-9])/g, "il-$1")
     // Soften common hamza+oo sequences in everyday Egyptian spelling.
     .replace(/\bil-2a?oo/g, "il-oo")
     .replace(/\b2a?oo/g, "oo")
+    // Readability: collapse word-initial 2ao... -> oo... (e.g., 2aoda -> ooda).
+    .replace(/\b2ao/g, "oo")
+    // Common Egyptian "what?" spelling
+    .replace(/\biyh\b/g, "eh")
     .replace(/\bil-2oo/g, "il-oo")
     .replace(/\b2oo/g, "oo")
+    // Common fixed form: Allah
+    .replace(/\bil-?lah\b/g, "allah")
+    // Common fixed Egyptian discourse items.
+    .replace(/\b2ayoo\b/g, "aywa")
     .trim();
 }
 
